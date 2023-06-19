@@ -418,8 +418,14 @@ class Outputs:
             self._other_outputs.append(output)
         return self
 
-    def add_umi_template_outputs(self):
-        """Adds the necessary outputs in order to create an UMI template."""
+    def add_umi_template_outputs(self, reporting_frequency="Hourly"):
+        """Adds the necessary outputs in order to create an UMI template.
+
+        Note:
+            The reporting frequency must be 'Hourly' for archetypal to convert IDF
+            models to UMI templates. Set to 'None' to use the reporting frequency of
+            the Outputs object.
+        """
         # list the outputs here
         variables = [
             "Air System Outdoor Air Minimum Flow Fraction",
@@ -435,7 +441,9 @@ class Outputs:
             "Zone Thermostat Heating Setpoint Temperature",
         ]
         for output in variables:
-            self._output_variables.add((output, self.reporting_frequency))
+            self._output_variables.add(
+                (output, reporting_frequency or self.reporting_frequency)
+            )
 
         meters = [
             "Baseboard:EnergyTransfer",
@@ -643,7 +651,6 @@ class Outputs:
         return self
 
     def add_load_balance_components(self):
-
         for group in [
             self.COOLING,
             self.HEATING,
@@ -720,12 +727,12 @@ class Outputs:
     def apply(self):
         """Applies the outputs to the idf model. Modifies the model by calling
         :meth:`~archetypal.idfclass.idf.IDF.newidfobject`"""
-        for (variable, reporting_frequency) in self.output_variables:
+        for variable, reporting_frequency in self.output_variables:
             self.idf.newidfobject(
                 key="Output:Variable".upper(),
                 **dict(Variable_Name=variable, Reporting_Frequency=reporting_frequency),
             )
-        for (meter, reporting_frequency) in self.output_meters:
+        for meter, reporting_frequency in self.output_meters:
             self.idf.newidfobject(
                 key="Output:Meter".upper(),
                 **dict(Key_Name=meter, Reporting_Frequency=reporting_frequency),
